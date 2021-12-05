@@ -23,10 +23,12 @@ FF_ALL_ARCHS_IOS6_SDK="armv7 armv7s i386"
 FF_ALL_ARCHS_IOS7_SDK="armv7 armv7s arm64 i386 x86_64"
 FF_ALL_ARCHS_IOS8_SDK="armv7 arm64 i386 x86_64"
 
-FF_ALL_ARCHS=$FF_ALL_ARCHS_IOS8_SDK
+FF_ALL_AECHS_CUSTOM="arm64-simulator armv7 arm64 i386 x86_64"
+
+FF_ALL_ARCHS=$FF_ALL_AECHS_CUSTOM
 
 #----------
-UNI_BUILD_ROOT=`pwd`
+UNI_BUILD_ROOT=$(pwd)
 UNI_TMP="$UNI_BUILD_ROOT/tmp"
 UNI_TMP_LLVM_VER_FILE="$UNI_TMP/llvm.ver.txt"
 FF_TARGET=$1
@@ -45,18 +47,42 @@ FF_LIBS="libavcodec libavfilter libavformat libavutil libswscale libswresample"
 do_lipo_ffmpeg () {
     LIB_FILE=$1
     LIPO_FLAGS=
+    LIPO_SIMULATOR_FLAGS=
+    LIPO_IPHONE_FLAGS=
+    LIPO_IPHONE_OUTPUT_HEADERS="$UNI_BUILD_ROOT/build/universal/iphone"
+    LIPO_SIMULAROR_OUTPUT_HEADERS="$UNI_BUILD_ROOT/build/universal/simulator"
+
     for ARCH in $FF_ALL_ARCHS
     do
-        ARCH_LIB_FILE="$UNI_BUILD_ROOT/build/ffmpeg-$ARCH/output/lib/$LIB_FILE"
-        if [ -f "$ARCH_LIB_FILE" ]; then
-            LIPO_FLAGS="$LIPO_FLAGS $ARCH_LIB_FILE"
-        else
-            echo "skip $LIB_FILE of $ARCH";
+        ARCH_LIB_FILE="$UNI_BUILD_ROOT/build/ffmpeg-$ARCH/output/lib/$LIB_FILE.a"
+        ARCH_LIB_HEADER="$UNI_BUILD_ROOT/build/ffmpeg-$ARCH/output/include/$LIB_FILE"
+        if [[ "${ARCH}" == "arm64" || "${ARCH}" == "armv7" ]]; then
+            LIPO_IPHONE_FLAGS="$LIPO_IPHONE_FLAGS $ARCH_LIB_FILE"
+        fi
+
+        if [[ "${ARCH}" == "arm64-simulator" || "${ARCH}" == "x86_64" || "${ARCH}" == "i386" ]]; then
+            LIPO_SIMULATOR_FLAGS="$LIPO_SIMULATOR_FLAGS $ARCH_LIB_FILE"
+            cp -rf $ARCH_LIB_HEADER $LIPO_IPHONE_OUTPUT_HEADERS
+        fi
+        
+        echo "$ARCH_LIB_FILE"
+        if [[ "${ARCH}" == "arm64-simulator" || "${ARCH}" == "arm64" ]]; then
+            LIPO_FLAGS="$LIPO_FLAGS -library $ARCH_LIB_FILE -headers $ARCH_LIB_HEADER"
+            cp -rf $ARCH_LIB_HEADER $LIPO_SIMULAROR_OUTPUT_HEADERS
         fi
     done
 
-    xcrun lipo -create $LIPO_FLAGS -output $UNI_BUILD_ROOT/build/universal/lib/$LIB_FILE
-    xcrun lipo -info $UNI_BUILD_ROOT/build/universal/lib/$LIB_FILE
+    echo "lipo flags: $LIPO_FLAGS"
+    echo "lipo simulator flags: $LIPO_SIMULATOR_FLAGS"
+    echo "lipo iphone flags: $LIPO_IPHONE_FLAGS"
+
+    LIPO_IPHONE_OUTPUT_LIB="$UNI_BUILD_ROOT/build/universal/iphone/$LIB_FILE.a"
+    LIPO_SIMULATOR_OUTPUT_LIB="$UNI_BUILD_ROOT/build/universal/simulator/$LIB_FILE.a"
+
+    xcrun lipo -create $LIPO_IPHONE_FLAGS -output $LIPO_IPHONE_OUTPUT_LIB
+    xcrun lipo -create $LIPO_SIMULATOR_FLAGS -output $LIPO_SIMULATOR_OUTPUT_LIB
+
+    xcodebuild -create-xcframework -library $LIPO_IPHONE_OUTPUT_LIB -headers $LIPO_IPHONE_OUTPUT_HEADERS/$LIB_FILE -library $LIPO_SIMULATOR_OUTPUT_LIB -headers $LIPO_SIMULAROR_OUTPUT_HEADERS/$LIB_FILE -output $UNI_BUILD_ROOT/build/universal/lib/$LIB_FILE.xcframework
 }
 
 SSL_LIBS="libcrypto libssl"
@@ -74,17 +100,17 @@ do_lipo_ssl () {
     done
 
     if [ "$LIPO_FLAGS" != "" ]; then
-        xcrun lipo -create $LIPO_FLAGS -output $UNI_BUILD_ROOT/build/universal/lib/$LIB_FILE
-        xcrun lipo -info $UNI_BUILD_ROOT/build/universal/lib/$LIB_FILE
+        xcrun lipo -create "$LIPO_FLAGS -output $UNI_BUILD_ROOT/build/universal/lib/$LIB_FILE"
+        xcrun lipo -info "$UNI_BUILD_ROOT/build/universal/lib/$LIB_FILE"
     fi
 }
 
 do_lipo_all () {
-    mkdir -p $UNI_BUILD_ROOT/build/universal/lib
+    mkdir -p "$UNI_BUILD_ROOT/build/universal/lib"
     echo "lipo archs: $FF_ALL_ARCHS"
     for FF_LIB in $FF_LIBS
     do
-        do_lipo_ffmpeg "$FF_LIB.a";
+        do_lipo_ffmpeg "$FF_LIB";
     done
 
     ANY_ARCH=

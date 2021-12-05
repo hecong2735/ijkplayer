@@ -17,9 +17,9 @@
 #
 
 # IJK_FFMPEG_UPSTREAM=git://git.videolan.org/ffmpeg.git
-IJK_FFMPEG_UPSTREAM=https://github.com/Bilibili/FFmpeg.git
-IJK_FFMPEG_FORK=https://github.com/Bilibili/FFmpeg.git
-IJK_FFMPEG_COMMIT=ff4.0--ijk0.8.8--20210426--001
+IJK_FFMPEG_UPSTREAM=https://git.ffmpeg.org/ffmpeg.git
+IJK_FFMPEG_FORK=https://git.ffmpeg.org/ffmpeg.git
+IJK_FFMPEG_COMMIT=release/4.4	
 IJK_FFMPEG_LOCAL_REPO=extra/ffmpeg
 
 IJK_GASP_UPSTREAM=https://github.com/Bilibili/gas-preprocessor.git
@@ -65,7 +65,6 @@ function pull_fork() {
     git checkout ${IJK_FFMPEG_COMMIT} -B ijkplayer
     cd -
 }
-
 function pull_fork_all() {
     for ARCH in $FF_ALL_ARCHS
     do
