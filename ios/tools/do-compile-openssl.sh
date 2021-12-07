@@ -83,6 +83,7 @@ echo "[*] config arch $FF_ARCH"
 echo "===================="
 
 FF_BUILD_NAME="unknown"
+FF_BUILD_OUTPUT_NAME=
 FF_XCRUN_PLATFORM="iPhoneOS"
 FF_XCRUN_OSVERSION=
 FF_GASPP_EXPORT=
@@ -92,16 +93,19 @@ if [ "$FF_ARCH" = "i386" ]; then
     FF_BUILD_NAME="openssl-i386"
     FF_XCRUN_PLATFORM="iPhoneSimulator"
     FF_XCRUN_OSVERSION="-mios-simulator-version-min=6.0"
+    FF_BUILD_OUTPUT_NAME=$FF_BUILD_NAME
     OPENSSL_CFG_FLAGS="darwin-i386-cc $OPENSSL_CFG_FLAGS"
 elif [ "$FF_ARCH" = "x86_64" ]; then
     FF_BUILD_NAME="openssl-x86_64"
     FF_XCRUN_PLATFORM="iPhoneSimulator"
     FF_XCRUN_OSVERSION="-mios-simulator-version-min=7.0"
+    FF_BUILD_OUTPUT_NAME=$FF_BUILD_NAME
     OPENSSL_CFG_FLAGS="darwin64-x86_64-cc $OPENSSL_CFG_FLAGS"
 elif [ "$FF_ARCH" = "armv7" ]; then
     FF_BUILD_NAME="openssl-armv7"
     FF_XCRUN_OSVERSION="-miphoneos-version-min=6.0"
     FF_XCODE_BITCODE="-fembed-bitcode"
+    FF_BUILD_OUTPUT_NAME=$FF_BUILD_NAME
     OPENSSL_CFG_FLAGS="$OPENSSL_CFG_FLAGS_ARM $OPENSSL_CFG_FLAGS"
 #    OPENSSL_CFG_CPU="--cpu=cortex-a8"
 elif [ "$FF_ARCH" = "armv7s" ]; then
@@ -109,13 +113,24 @@ elif [ "$FF_ARCH" = "armv7s" ]; then
     OPENSSL_CFG_CPU="--cpu=swift"
     FF_XCRUN_OSVERSION="-miphoneos-version-min=6.0"
     FF_XCODE_BITCODE="-fembed-bitcode"
+    FF_BUILD_OUTPUT_NAME=$FF_BUILD_NAME
     OPENSSL_CFG_FLAGS="$OPENSSL_CFG_FLAGS_ARM $OPENSSL_CFG_FLAGS"
 elif [ "$FF_ARCH" = "arm64" ]; then
     FF_BUILD_NAME="openssl-arm64"
     FF_XCRUN_OSVERSION="-miphoneos-version-min=7.0"
     FF_XCODE_BITCODE="-fembed-bitcode"
+    FF_BUILD_OUTPUT_NAME=$FF_BUILD_NAME
     OPENSSL_CFG_FLAGS="$OPENSSL_CFG_FLAGS_ARM $OPENSSL_CFG_FLAGS"
     FF_GASPP_EXPORT="GASPP_FIX_XCODE5=1"
+elif [ "$FF_ARCH" = "arm64-simulator" ]; then
+    FF_ARCH="arm64"
+    FF_BUILD_NAME="openssl-arm64"
+    FF_XCRUN_OSVERSION="-mios-simulator-version-min=7.0"
+    FF_XCODE_BITCODE="-fembed-bitcode"
+    FF_XCRUN_PLATFORM="iPhoneSimulator"
+    FF_BUILD_OUTPUT_NAME="openssl-arm64-simulator"
+    OPENSSL_CFG_FLAGS="$OPENSSL_CFG_FLAGS_ARM $OPENSSL_CFG_FLAGS"
+    FF_GASPP_EXPORT="GASPP_FIX_XCODE5=1"    
 else
     echo "unknown architecture $FF_ARCH";
     exit 1
@@ -132,7 +147,7 @@ echo "===================="
 
 
 FF_BUILD_SOURCE="$FF_BUILD_ROOT/$FF_BUILD_NAME"
-FF_BUILD_PREFIX="$FF_BUILD_ROOT/build/$FF_BUILD_NAME/output"
+FF_BUILD_PREFIX="$FF_BUILD_ROOT/build/$FF_BUILD_OUTPUT_NAME/output"
 
 mkdir -p $FF_BUILD_PREFIX
 
@@ -166,14 +181,12 @@ OPENSSL_CFG_FLAGS="$OPENSSL_CFG_FLAGS --openssldir=$FF_BUILD_PREFIX"
 export DEBUG_INFORMATION_FORMAT=dwarf-with-dsym
 
 cd $FF_BUILD_SOURCE
-if [ -f "./Makefile" ]; then
-    echo 'reuse configure'
-else
-    echo "config: $OPENSSL_CFG_FLAGS"
-    ./Configure \
-        $OPENSSL_CFG_FLAGS
-    make clean
-fi
+
+echo "config: $OPENSSL_CFG_FLAGS"
+./Configure \
+    $OPENSSL_CFG_FLAGS
+make clean
+
 
 #--------------------
 echo "\n--------------------"
