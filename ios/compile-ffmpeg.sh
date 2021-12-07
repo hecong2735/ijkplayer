@@ -82,7 +82,7 @@ do_lipo_ffmpeg () {
     xcrun lipo -create $LIPO_IPHONE_FLAGS -output $LIPO_IPHONE_OUTPUT_LIB
     xcrun lipo -create $LIPO_SIMULATOR_FLAGS -output $LIPO_SIMULATOR_OUTPUT_LIB
 
-    xcodebuild -create-xcframework -library $LIPO_IPHONE_OUTPUT_LIB -headers $LIPO_IPHONE_OUTPUT_HEADERS/$LIB_FILE -library $LIPO_SIMULATOR_OUTPUT_LIB -headers $LIPO_SIMULAROR_OUTPUT_HEADERS/$LIB_FILE -output $UNI_BUILD_ROOT/build/universal/lib/$LIB_FILE.xcframework
+    xcodebuild -create-xcframework -library $LIPO_IPHONE_OUTPUT_LIB -library $LIPO_SIMULATOR_OUTPUT_LIB -output $UNI_BUILD_ROOT/build/universal/lib/$LIB_FILE.xcframework
 }
 
 SSL_LIBS="libcrypto libssl"
