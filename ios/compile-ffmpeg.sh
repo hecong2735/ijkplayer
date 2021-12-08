@@ -46,7 +46,6 @@ echo_archs() {
 FF_LIBS="libavcodec libavfilter libavformat libavutil libswscale libswresample"
 do_lipo_ffmpeg () {
     LIB_FILE=$1
-    LIPO_FLAGS=
     LIPO_SIMULATOR_FLAGS=
     LIPO_IPHONE_FLAGS=
     LIPO_IPHONE_OUTPUT_HEADERS="$UNI_BUILD_ROOT/build/universal/iphone"
@@ -66,13 +65,8 @@ do_lipo_ffmpeg () {
         fi
         
         echo "$ARCH_LIB_FILE"
-        if [[ "${ARCH}" == "arm64-simulator" || "${ARCH}" == "arm64" ]]; then
-            LIPO_FLAGS="$LIPO_FLAGS -library $ARCH_LIB_FILE -headers $ARCH_LIB_HEADER"
-            cp -rf $ARCH_LIB_HEADER $LIPO_SIMULAROR_OUTPUT_HEADERS
-        fi
     done
 
-    echo "lipo flags: $LIPO_FLAGS"
     echo "lipo simulator flags: $LIPO_SIMULATOR_FLAGS"
     echo "lipo iphone flags: $LIPO_IPHONE_FLAGS"
 

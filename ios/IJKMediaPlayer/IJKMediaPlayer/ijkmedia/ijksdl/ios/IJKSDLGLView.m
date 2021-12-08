@@ -37,6 +37,7 @@ typedef NS_ENUM(NSInteger, IJKSDLGLViewApplicationState) {
 @interface IJKSDLGLView()
 @property(atomic,strong) NSRecursiveLock *glActiveLock;
 @property(atomic) BOOL glActivePaused;
+@property (nonatomic, strong) CAEAGLLayer *eaglLayer;
 @end
 
 @implementation IJKSDLGLView {
@@ -69,12 +70,12 @@ typedef NS_ENUM(NSInteger, IJKSDLGLViewApplicationState) {
 @synthesize scaleFactor                = _scaleFactor;
 @synthesize fps                        = _fps;
 
-+ (Class) layerClass
++ (Class)layerClass
 {
 	return [CAEAGLLayer class];
 }
 
-- (id) initWithFrame:(CGRect)frame
+- (id)initWithFrame:(CGRect)frame
 {
     self = [super initWithFrame:frame];
     if (self) {
@@ -85,8 +86,23 @@ typedef NS_ENUM(NSInteger, IJKSDLGLViewApplicationState) {
         [self registerApplicationObservers];
 
         _didSetupGL = NO;
-        if ([self isApplicationActive] == YES)
+        
+        UIApplicationState appState = [UIApplication sharedApplication].applicationState;
+        switch (appState) {
+            case UIApplicationStateActive:
+                _applicationState = IJKSDLGLViewApplicationForegroundState;
+                break;
+            case UIApplicationStateInactive:
+            case UIApplicationStateBackground:
+            default:
+                _applicationState = IJKSDLGLViewApplicationBackgroundState;
+                break;
+        }
+        
+        self.eaglLayer = (CAEAGLLayer *)self.layer;
+        if ([self isApplicationActive] == YES) {
             [self setupGLOnce];
+        }
     }
 
     return self;
@@ -138,11 +154,6 @@ typedef NS_ENUM(NSInteger, IJKSDLGLViewApplicationState) {
     }
 
     return YES;
-}
-
-- (CAEAGLLayer *)eaglLayer
-{
-    return (CAEAGLLayer*) self.layer;
 }
 
 - (BOOL)setupGL
@@ -328,11 +339,11 @@ typedef NS_ENUM(NSInteger, IJKSDLGLViewApplicationState) {
     [self unlockGLActive];
 }
 
-- (void) display_pixels: (IJKOverlay *) overlay {
+- (void)display_pixels:(IJKOverlay *)overlay {
     return;
 }
 
-- (void)display: (SDL_VoutOverlay *) overlay
+- (void)display:(SDL_VoutOverlay *)overlay
 {
     if (_didSetupGL == NO)
         return;
