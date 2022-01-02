@@ -526,14 +526,6 @@ inline static int getPlayerOption(IJKFFOptionCategory category)
     } else {
         NSString *message = [NSString stringWithFormat:@"actual: %s\n expect: %s\n", actualVersion, expectVersion];
         NSLog(@"\n!!!!!!!!!!\n%@\n!!!!!!!!!!\n", message);
-        if (showAlert) {
-            UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"Unexpected FFmpeg version"
-                                                                message:message
-                                                               delegate:nil
-                                                      cancelButtonTitle:@"OK"
-                                                      otherButtonTitles:nil];
-            [alertView show];
-        }
         return NO;
     }
 }
@@ -546,16 +538,9 @@ inline static int getPlayerOption(IJKFFOptionCategory category)
     if (0 == strcmp(actualVersion, expectVersion)) {
         return YES;
     } else {
-        if (showAlert) {
-            NSString *message = [NSString stringWithFormat:@"actual: %s\n expect: %s\n",
-                                 actualVersion, expectVersion];
-            UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"Unexpected ijkplayer version"
-                                                                message:message
-                                                               delegate:nil
-                                                      cancelButtonTitle:@"OK"
-                                                      otherButtonTitles:nil];
-            [alertView show];
-        }
+        NSString *message = [NSString stringWithFormat:@"actual: %s\n expect: %s\n",
+                             actualVersion, expectVersion];
+        NSLog(@"\n!!!!!!!!!!\n%@\n!!!!!!!!!!\n", message);
         return NO;
     }
 }
