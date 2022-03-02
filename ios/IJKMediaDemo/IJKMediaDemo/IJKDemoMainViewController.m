@@ -23,6 +23,7 @@
 #import "IJKDemoLocalFolderViewController.h"
 #import "IJKDemoSampleViewController.h"
 #import <MobileCoreServices/MobileCoreServices.h>
+#import <Photos/Photos.h>
 
 @interface IJKDemoMainViewController () <UITableViewDataSource, UITableViewDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate>
 
@@ -202,9 +203,8 @@
     if (CFStringCompare ((CFStringRef) mediaType, kUTTypeMovie, 0)
         == kCFCompareEqualTo) {
 
-        NSString *moviePath = [[info objectForKey:
-                                UIImagePickerControllerMediaURL] path];
-        movieUrl = [NSURL URLWithString:moviePath];
+        movieUrl = [info objectForKey:
+                                UIImagePickerControllerMediaURL];
     }
 
     [self dismissViewControllerAnimated:YES completion:^(void){
@@ -222,6 +222,10 @@
 - (BOOL) startMediaBrowserFromViewController: (UIViewController*) controller
                                usingDelegate: (id <UIImagePickerControllerDelegate,
                                                UINavigationControllerDelegate>) delegate {
+    [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
+        
+    }];
+    
 
     if (([UIImagePickerController isSourceTypeAvailable:
           UIImagePickerControllerSourceTypeSavedPhotosAlbum] == NO)
